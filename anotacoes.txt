@@ -1,0 +1,16 @@
+kd = difuso
+ip = intensidade da fonte de luz
+id = ip*kd*cos(angulo)
+
+ks = especular
+q = expoente especular de phong
+is = ip*ks*cos(angulo^q)
+
+R = 2N (N.L) - L
+
+I = Ia.Ka
+Ia = intensidade da luz ambiente
+Ka = coeficiente de reflexão ambiente
+
+equação final
+I = Ia*ka + Σ{Ipm[kd(N.L) + ks(R.V)q]}
