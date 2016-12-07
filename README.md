@@ -1,5 +1,5 @@
-# Primeiro Projeto de PG 2016-2
-## Interpolação de B-splines Cúbico C1 Interativo de Hermite
+# Segundo Projeto de PG 2016-2
+## Sequência de Câmeras
 
 # Dependencias
 - Python3.5

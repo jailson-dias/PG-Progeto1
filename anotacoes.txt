@@ -1,3 +1,10 @@
+entrada
+  - dados do objeto (pontos e triangulos)
+  - atributos do objeto (ka, kd, ks, q e Od)
+  - atributos da cena (Ia, Il e Pl)
+  - atributos da câmera virtual (C, N, V, d, hx, e hy)
+  - curva de bézier (b0, b1, ..., bn)
+
 kd = difuso
 ip = intensidade da fonte de luz
 id = ip*kd*cos(angulo)
@@ -13,4 +20,7 @@ Ia = intensidade da luz ambiente
 Ka = coeficiente de reflexão ambiente
 
 equação final
-I = Ia*ka + Σ{Ipm[kd(N.L) + ks(R.V)q]}
+I = Ia.ka + Σ{Ipm.[kd.(N.L) + ks.(R.V)^q]}
+
+equação de silvio
+I = Ia.ka + Σ{Ipm("mult_(xx,yy,zz)")Op.kd.(N.L) + Ipm.ks.(R.V)^q}

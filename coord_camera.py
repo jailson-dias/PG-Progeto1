@@ -15,8 +15,8 @@ def m_base():
         pontos_cam[i].p = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,pontos_cam[i].p)
         pontos_cam[i].normal = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,pontos_cam[i].normal)
 
-    for i in range(0,len(luz_cam)):
-        luz_cam[i].p = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,luz_cam[i].p)
+    luz_cam.pl = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,luz_cam.pl)
+    luz_cam.od = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,luz_cam.od)
 
     for i in range(0,len(triangulos_cam)):
         triangulos_cam[i].p1 = mult_matriz(camera_cam.u,camera_cam.v,camera_cam.n,triangulos_cam[i].p1)
@@ -35,7 +35,7 @@ def mult_matriz(u,v,n,p):
 main()
 get_valores()
 m_base()
-for i in range(0,100):
+for i in range(0,20):
     print (camera_cam.c)
     ler_camera('camera.txt')
     get_valores()
