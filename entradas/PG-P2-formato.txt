@@ -1,0 +1,71 @@
+camera.cfg
+/---------------------------------------\
+| -200 -50 300                          | ; Ponto da camera
+| 0.667 0.172 -1                        | ; Vetor N
+| 0 3 0                                 | ; Vetor V
+| 65 0.5 0.6                            | ; distancia hx hy
+|                                       |
+\---------------------------------------/
+
+iluminacao.txt
+/---------------------------------------\
+| -200 -50 300                          | ; Pl - Coordenadas do ponto de luz
+| 1                                     | ; ka - reflexao ambiental
+| 2 2 2                                 | ; Ia - vetor cor ambiental
+| 1                                     | ; kd - constante difusa
+| 1 1 1                                 | ; Od - vetor difuso
+| 0.5                                   | ; ks - parte especular
+| 0 255 0                               | ; Il - cor da fonte de luz
+| 2                                     | ; n  - constante de rugosidade
+|                                       |
+\---------------------------------------/
+
+multi_iluminacao.txt
+/---------------------------------------\
+| 1                                     | ; ka - reflexao ambiental
+| 2 2 2                                 | ; Ia - vetor cor ambiental
+| 1                                     | ; kd - constante difusa
+| 1 1 1                                 | ; Od - vetor difuso
+| 0.5                                   | ; ks - parte especular
+| 2                                     | ; n  - constante de rugosidade
+| 2                                     | ; Ql - quantidade de pontos de luz
+| -200 -50 300                          | ; Pl - Coordenadas do ponto de luz1
+| 0 255 0                               | ; Il - cor da fonte de luz1
+| 820 -150 -200                         | ; Pl - Coordenadas do ponto de luz2
+| 0 128 255                             | ; Il - cor da fonte de luz2
+|                                       |
+\---------------------------------------/
+
+objeto.byu
+/---------------------------------------\
+| 3 1                                   | ; 3 pontos e 1 triangulo
+| 50.0000 0.0000 0.000                  | ; ponto 1: P1(50, 0, 0)
+| 0 50 0                                | ; ponto 2: P2(0, 50, 0)
+| 0 0 50                                | ; ponto 3: P3(0, 0, 50)
+| 1 2 3                                 | ; triangulo 1: formado pelos vertices 1, 2 e 3
+|                                       |
+\---------------------------------------/
+
+superficie.byu
+/---------------------------------------\
+| 1 2                                   | ; superficie 1x2
+| 40                                    | ; quantidade de avaliacoes em cada direcao
+| -150.0 -150.0 400.0                   | ; ponto de controle (0,0)
+| -50.0 -150.0 200.0                    | ; ponto de controle (0,1)
+| 50.0 -150.0 -100.0                    | ; ponto de controle (0,2)
+| -150.0 -50.0 100.0                    | ; ponto de controle (1,0)
+| -50.0 -50.0 300.0                     | ; ponto de controle (1,1)
+| 50.0 -50.0 0.0                        | ; ponto de controle (1,2)
+|                                       |
+\---------------------------------------/
+
+plano.byu
+/---------------------------------------\
+| 3.5                                   | ; escala s
+| 100.0 100.0 100.0                     | ; ponto P0
+| 150.0  50.0 200.0                     | ; ponto P1
+| 200.0 200.0 150.0                     | ; ponto P2
+|                                       |
+\---------------------------------------/
+
+textura.jpg [Imagem jpeg de tamanho qualquer]
