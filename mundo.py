@@ -1,13 +1,19 @@
-
+from OpenGL.GL import *
+from OpenGL.GL.exceptional import glEnd
+from OpenGL.GLUT import *
 
 # tamanho da tela
 
 height, width = 400, 600
+pontos_camera = []
+z_buffer = []
+cores = []
 
 pontos_tela = []
 pontos = []
 triangulos = []
 luz = 0
+luz_camera = 0
 camera = 0
 
 def gramschmidt(v,n):
@@ -41,6 +47,9 @@ class Ponto3D(object):
     def __mul__(self, a):
         return Ponto3D(self.x*a,self.y*a,self.z*a)
 
+    def __truediv__(self, a):
+        return Ponto3D(self.x/a,self.y/a,self.z/a)
+
     def __neg__(self):
         return self*-1
 
@@ -65,18 +74,79 @@ class Ponto3D(object):
 
 class PontosNormal3D(object):
 
-    def __init__(self,p,normal,cor):
+    def __init__(self,p,normal):
         self.p = p
         self.normal = normal
-        self.cor = cor
 
 class TriangulosNormal3D(object):
 
-    def __init__(self,p1,p2,p3,normal):
+    def __init__(self,p1,p2,p3,normal,dist):
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
         self.normal = normal
+        self.dist = dist
+
+    def __lt__(self, s):
+        return self.dist < s.dist
+
+    def igual(self):
+        global pontos_tela
+        if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) or (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y) or (pontos_tela[self.p2].x == pontos_tela[self.p3].x and pontos_tela[self.p2].y == pontos_tela[self.p3].y)):
+            return True
+        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y or pontos_tela[self.p1].y == pontos_tela[self.p3].y or pontos_tela[self.p2].y == pontos_tela[self.p3].y):
+            return True
+        return False
+
+    def sort_asc_y(self):
+        global pontos_tela
+        if (pontos_tela[self.p1].y > pontos_tela[self.p2].y):
+            vTmp = self.p1
+            self.p1 = self.p2
+            self.p2 = vTmp
+        if (pontos_tela[self.p1].y > pontos_tela[self.p3].y):
+            vTmp = self.p1
+            self.p1 = self.p3
+            self.p3 = vTmp
+        if (pontos_tela[self.p2].y > pontos_tela[self.p3].y):
+            vTmp = self.p2
+            self.p2 = self.p3
+            self.p3 = vTmp
+
+    def pintar(self):
+        global pontos_tela, pontos_camera
+        if (pontos_tela[self.p2].y == pontos_tela[self.p3].y):
+            print (pontos_tela[self.p1],pontos_tela[self.p2],
+            pontos_tela[self.p3])
+            bottom_triangulo(self.p1, self.p2, self.p3)
+        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y):
+            top_triangulo(self.p1, self.p2, self.p3)
+        else:
+            # dividindo o triangulo em 2
+            p4_tela = Ponto2D(int(pontos_tela[self.p1].x + (float(pontos_tela[self.p2].y - pontos_tela[self.p1].y) / float(pontos_tela[self.p3].y - pontos_tela[self.p1].y)) * (pontos_tela[self.p3].x - pontos_tela[self.p1].x)),
+            pontos_tela[self.p2].y)
+
+            print (pontos_tela[self.p1],pontos_tela[self.p2],
+            pontos_tela[self.p3],p4_tela)
+
+            # encontrando o a,b e c
+            l1 = Linha(pontos_tela[self.p1].x,pontos_tela[self.p2].x,
+            pontos_tela[self.p3].x,p4_tela.x)
+            l2 = Linha(pontos_tela[self.p1].y,pontos_tela[self.p2].y,
+            pontos_tela[self.p3].y,p4_tela.y)
+            l3 = Linha(1,1,1,1)
+            a,b,c = Escalona(l1,l2,l3).esc()
+
+            # encontrando o novo ponto
+            ponto = pontos_camera[self.p1].p*a+pontos_camera[self.p2].p*b + pontos_camera[self.p3].p*c
+            normal = pontos_camera[self.p1].normal*a + pontos_camera[self.p2].normal*b + pontos_camera[self.p3].normal*c
+            p4_camera = PontosNormal3D(ponto,normal)
+            pontos_tela.append(p4_tela)
+            pontos_camera.append(p4_camera)
+
+            # pintando os trinagulos
+            bottom_triangulo(self.p1, self.p2, len(pontos_tela)-1)
+            top_triangulo(self.p2, len(pontos_tela)-1, self.p3)
 
 class Luz3D(object):
 
@@ -117,39 +187,33 @@ class RGB(object):
     def __add__(self, cor):
         return RGB(min(self.r+cor.r,255),min(self.g+cor.g,255),min(self.b+cor.b,255))
 
+    def __truediv__(self, a):
+        return RGB(self.r/a,self.g/a,self.b/a)
+
     def __str__(self):
         return "("+str(self.r)+", "+str(self.g)+", "+str(self.b)+")"
 
 # utilizado para calcular a formula (I = Ia.ka + Ip*Op.kd.(N.L) + Ipm.ks.(R.V)^q)
-def get_cor(i):
-    global camera, luz, pontos
-    ponto = pontos[i]
-    ia = luz.ia*luz.ka
-    # print (ia, "ia")
-    l = (luz.pl-ponto.p)
-    # print (l,"l")
+def get_cor(ponto, normal):
+    global camera, luz_camera
+    ia = luz_camera.ia*luz_camera.ka
+    l = (luz_camera.pl-ponto)
     l.normalizado()
-    normal = ponto.normal
+    # normal = ponto.normal
     normal.normalizado()
     id = RGB(0,0,0)
     ie = RGB(0,0,0)
     if (normal.prod_escalar(l)>=0):
-        id = (luz.od%luz.il)*luz.kd*(normal.prod_escalar(l))
-        # print (id, "id")
-        v = (camera.c - ponto.p)
+        id = (luz_camera.od%luz_camera.il)*luz_camera.kd*(normal.prod_escalar(l))
+        v = (camera.c - ponto)
         v.normalizado()
         if (normal.prod_escalar(v)<0):
             normal = -normal
-        # print (v, "v")
         r = (normal*2)*(normal.prod_escalar(l)) - l
         r.normalizado()
         if (v.prod_escalar(r)>=0):
-            # print (r,"r")
-            ie = (luz.il)*luz.ks*(pow(r.prod_escalar(v),luz.n))
-            # print (ie, "ie")
-    # print (ia, id, ie, "separado")
-    pontos[i].cor = ia + id + ie
-    # print (pontos[i].cor)
+            ie =(luz_camera.il)*luz_camera.ks*(pow(r.prod_escalar(v), luz_camera.n))
+    return ia + id + ie
 
 def ler_objeto(path):
     global pontos, triangulos
@@ -160,7 +224,7 @@ def ler_objeto(path):
     while (i > 0):
         i -= 1
         xyz = arquivo.readline().split(' ')
-        pontos.append(PontosNormal3D(Ponto3D(float(xyz[0]),float(xyz[1]),float(xyz[2])),Ponto3D(0,0,0), RGB(255,255,255)))
+        pontos.append(PontosNormal3D(Ponto3D(float(xyz[0]),float(xyz[1]),float(xyz[2])),Ponto3D(0,0,0)))
     while (j > 0):
         j -= 1
         t = arquivo.readline().split(' ')
@@ -171,15 +235,13 @@ def ler_objeto(path):
         p3 = pontos[int(t[2])-1].p
         normal = (p2-p1).prod_vetorial(p3-p1) # normal do triangulo
         normal.normalizado()
-        triangulos.append(TriangulosNormal3D(int(t[0])-1,int(t[1])-1,int(t[2])-1,normal))
+        triangulos.append(TriangulosNormal3D(int(t[0])-1,int(t[1])-1,int(t[2])-1,normal,0))
         pontos[int(t[0])-1].normal += normal # calcula a normal do ponto
         pontos[int(t[1])-1].normal += normal
         pontos[int(t[2])-1].normal += normal
 
     for i in range(0,len(pontos)):
         pontos[i].normal.normalizado() # normalizando a normal dos pontos
-
-    # print (len(pontos), len(triangulos), "object")
 
 def ler_luz(path):
     global luz
@@ -225,18 +287,7 @@ def init():
 def cor_pontos():
     global pontos
     for i in range(0,len(pontos)):
-        get_cor(i)
-
-# def get_dados():
-#     global pontos,triangulos, luz, camera
-#     return (pontos, triangulos, luz, camera)
-
-
-
-
-
-
-pontos_camera = []
+        pontos[i].cor = get_cor(pontos[i].p, pontos[i].normal)
 
 def mult_matriz(u,v,n,p):
     return Ponto3D(u.x*p.x+u.y*p.y+u.z*p.z,
@@ -245,13 +296,13 @@ def mult_matriz(u,v,n,p):
 
 # utilizados para passar os pontos da base mundo para a base camera
 def get_pontos_camera():
-    global pontos, pontos_camera, camera
+    global pontos, pontos_camera, camera, luz, luz_camera
     for i in range(0,len(pontos)):
-        pontos_camera.append(mult_matriz(camera.u, camera.v,camera.n, pontos[i].p - camera.c))
-
-    # print (len(pontos_camera), "camera")
-z_buffer = []
-cores = []
+        a = mult_matriz(camera.u, camera.v,camera.n, pontos[i].p - camera.c)
+        b = mult_matriz(camera.u, camera.v,camera.n, (pontos[i].normal + pontos[i].p) - camera.c)
+        pontos_camera.append(PontosNormal3D(a,b-a))
+    luz_camera = luz
+    luz_camera.pl = mult_matriz(camera.u, camera.v,camera.n, luz.pl - camera.c)
 
 class Ponto2D(object):
 
@@ -302,10 +353,7 @@ def init_z_buffer():
 def get_ponto_tela():
     global pontos_tela, pontos, pontos_camera, camera, width,height
     for i in range(0,len(pontos_camera)):
-        pontos_tela.append(Ponto2D(int(((camera.d/camera.hx)*(pontos_camera[i].x/pontos_camera[i].z) + 1)*width/2),
-                                int((1 - (camera.d/camera.hy)*(pontos_camera[i].y/pontos_camera[i].z))*height/2)))
-
-    # print (len(pontos_tela), "tela")
+        pontos_tela.append(Ponto2D(int(((camera.d/camera.hx)* (pontos_camera[i].p.x/pontos_camera[i].p.z) + 1)*width/2), int((1-(camera.d/camera.hy) *(pontos_camera[i].p.y / pontos_camera[i].p.z))*height/2)))
 
 class Linha(object):
 
@@ -315,7 +363,8 @@ class Linha(object):
         self.c = c
         self.d = d
 
-    def __div__(self,a):
+    def __truediv__(self,a):
+        a = (a or 1)
         return Linha(self.a/a,self.b/a,self.c/a,self.d/a)
 
     def __mod__(self, a):
@@ -355,73 +404,99 @@ class Escalona(object):
         l2 = l2 + l3
         return (l1.d,l2.d,l3.d)
 
-
-
-from hermite_bezier import *
-
 def into(p):
     global width, height
     return (p.x <= width and p.x >= 0 and p.y <= height and p.y >= 0)
 
 def get_into_tela():
     global pontos_tela, triangulos, pontos_camera,z_buffer,cores
+
+    glBegin(GL_POINTS)
     for i in range(0,len(triangulos)):
+        if (not triangulos[i].igual()):
+            p1 = pontos_tela[triangulos[i].p1]
+            p2 = pontos_tela[triangulos[i].p2]
+            p3 = pontos_tela[triangulos[i].p3]
+            if(into(p1) and into(p2) and into(p3)):
+                triangulos[i].sort_asc_y()
+                triangulos[i].pintar()
+    glEnd()
 
-        # print (i, len(triangulos))
-        # print (triangulos[i].p1,triangulos[i].p2,triangulos[i].p3, "pontos")
-        p1 = pontos_tela[triangulos[i].p1]
-        p2 = pontos_tela[triangulos[i].p2]
-        p3 = pontos_tela[triangulos[i].p3]
-        if(into(p1) and into(p2) and into(p3)):
-            # p4 = Ponto2D((p1.x+p2.x+p3.x)/3.0,(p1.y+p2.y+p3.y)/3.0)
-            # p4 = p1
-            # if (p2.x>p4.x):
-            #     p4 = p2
-            # if (p3.x>p4.x):
-            #     p4 = p3
-            # a = Linha(p1.x,p2.x,p3.x,p4.x)
-            # b = Linha(p1.y,p2.y,p3.y,p4.y)
-            # c = Linha(1.0,1.0,1.0,1.0)
-            # d = Escalona(a,b,c)
-            # alfa, beta, gama = d.esc()
-            z = (pontos_camera[triangulos[i].p1].z)
-            # pontos_camera[triangulos[i].p2].z+
-            # pontos_camera[triangulos[i].p3].z)/3.0
-            # print (z_buffer[p1.x][p1.y],"zzzz")
-            # print (p1.x,p1.y)
-            # glPointSize(1)
-            # glBegin(GL_POINTS)
-            glShadeModel(GL_SMOOTH);
-            glBegin(GL_TRIANGLES);
-            # cor = pontos[triangulos[i].p1].cor
-            # glColor3f(int(cor.r),int(cor.g),int(cor.b))
-            # print (int(cor.r),int(cor.g),int(cor.b))
-            # if (z_buffer[p1.x][p1.y] > z):
-            z_buffer[p1.x][p1.y] = z
-            cor = pontos[triangulos[i].p1].cor
-            print (p1.x,p1.y,cor)
+
+def top_triangulo(p1,p2,p3):
+    global pontos_camera, pontos_tela
+    slope1 = (float(pontos_tela[p3].x - pontos_tela[p1].x)/ float(pontos_tela[p3].y - pontos_tela[p1].y))
+    slope2 = (float(pontos_tela[p3].x - pontos_tela[p2].x) /        float(pontos_tela[p3].y - pontos_tela[p2].y))
+
+    x1 = pontos_tela[p3].x
+    x2 = pontos_tela[p3].x + 0.5
+
+    sline = pontos_tela[p3].y
+    l3 = Linha(1,1,1,1)
+    while(sline > pontos_tela[p1].y):
+        x_aux = x1
+        inc = 1
+        if (x1 > x2):
+            inc = -1
+        while(x_aux <= x2):
+            l1 = Linha(pontos_tela[p1].x,pontos_tela[p2].x,pontos_tela[p3].x,
+                x_aux)
+            l2 = Linha(pontos_tela[p1].y,pontos_tela[p2].y,pontos_tela[p3].y,
+                sline)
+            a,b,c = Escalona(l1,l2,l3).esc()
+            ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
+            normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
+            cor = get_cor(ponto,normal)
+            cor = cor/255.0
             glColor3f(cor.r,cor.g,cor.b)
-            glVertex2f(p1.x, p1.y)
-            z = (pontos_camera[triangulos[i].p2].z)
-            # if (z_buffer[p2.x][p2.y] > z):
-            z_buffer[p2.x][p2.y] = z
-            cor = pontos[triangulos[i].p2].cor
-            print (p2.x,p2.y,cor)
+            glVertex2f(x_aux,sline)
+            x_aux += inc
+        sline-=1
+        x1 -= slope1
+        x2 -= slope2
+
+
+def bottom_triangulo(p1,p2,p3):
+    global pontos_camera, pontos_tela
+    slope1 = (float(pontos_tela[p2].x - pontos_tela[p1].x)/ float(pontos_tela[p2].y - pontos_tela[p1].y))
+    slope2 = (float(pontos_tela[p3].x - pontos_tela[p1].x) / float(pontos_tela[p3].y - pontos_tela[p1].y))
+
+    x1 = pontos_tela[p1].x
+    x2 = pontos_tela[p1].x + 0.5
+
+    sline = pontos_tela[p1].y
+    l3 = Linha(1,1,1,1)
+    while(sline <= pontos_tela[p2].y):
+        x_aux = x1
+        inc = 1
+        if(x1>x2):
+            inc = -1
+
+        while(x_aux <= x2):
+            l1 = Linha(pontos_tela[p1].x,pontos_tela[p2].x,pontos_tela[p3].x,
+                x_aux)
+            l2 = Linha(pontos_tela[p1].y,pontos_tela[p2].y,pontos_tela[p3].y,
+                sline)
+            a,b,c = Escalona(l1,l2,l3).esc()
+            ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
+            normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
+            cor = get_cor(ponto,normal)
+            cor = cor/255.0
             glColor3f(cor.r,cor.g,cor.b)
-            glVertex2f(p2.x, p2.y)
-            z = (pontos_camera[triangulos[i].p3].z)
-            # if (z_buffer[p3.x][p3.y] > z):
-            z_buffer[p3.x][p3.y] = z
-            cor = pontos[triangulos[i].p3].cor
-            print (p3.x,p3.y,cor)
-            glColor3f(cor.r,cor.g,cor.b)
-            glVertex2f(p3.x, p3.y)
+            glVertex2f(x_aux,sline)
+            x_aux += inc
+        sline+=1
+        x1 += slope1
+        x2 += slope2
 
-
-            glEnd()
-
-
-
+def ordenar_triangulos():
+    global triangulos, pontos_camera
+    for i in range(0,len(triangulos)):
+        triangulos[i].dist = ((pontos_camera[triangulos[i].p1].p/3.0) +
+                            (pontos_camera[triangulos[i].p2].p/3.0) +
+                            (pontos_camera[triangulos[i].p3].p/3.0)).norma()
+    triangulos.sort()
+    get_into_tela()
 
 
 def display():
@@ -429,7 +504,7 @@ def display():
     global color_line_pontos,color_line_vector
     glClear(GL_COLOR_BUFFER_BIT)
 
-    get_into_tela()
+    ordenar_triangulos()
 
     glFlush()
 
@@ -444,21 +519,15 @@ def reshape(width, height):
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-# def pintar(button, state, x, y):
-#
-#     display()
-
-
 
 def main():
-    # global pontos_camera
     glutInit()
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
     glutInitWindowSize(600, 400)
     glutInitWindowPosition(0, 0)
     glutCreateWindow("PG - 2016.2")
 
-    glClearColor(0.0, 0.0, 0.0, 0.0)
+    glClearColor(0.3, 1.0, 0.0, 0.0)
     glLineWidth(3.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
@@ -467,27 +536,15 @@ def main():
     glutReshapeFunc(reshape)
 
     init()
-    ler_objeto('entradas/Objetos/camaro.byu')
+    ler_objeto('entradas/Objetos/calice2.byu')
     ler_luz('luz.txt')
-    ler_camera('entradas/Cameras/camaro.cfg')
-    cor_pontos()
-    # print (pontos_camera)
+    ler_camera('entradas/Cameras/calice2.cfg')
 
     get_pontos_camera()
-    init_z_buffer()
+    # init_z_buffer()
     get_ponto_tela()
-    # glutMouseFunc(pintar)
-    # print ("fim")
+    ordenar_triangulos()
     glutMainLoop()
 
 if __name__ == '__main__':
     main()
-    # p1 = Ponto2D(1.0,0.0)
-    # p2 = Ponto2D(0.0,1.0)
-    # p3 = Ponto2D(1.0,1.0)
-    # p4 = Ponto2D(1.0,1.0)
-    # a = Linha(p1.x,p2.x,p3.x,p4.x)
-    # b = Linha(p1.y,p2.y,p3.y,p4.y)
-    # c = Linha(1.0,1.0,1.0,1.0)
-    # d = Escalona(a,b,c)
-    # print (d.esc())
