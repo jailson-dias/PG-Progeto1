@@ -56,9 +56,9 @@ class TriangulosNormal3D(object):
 
     def reta(self):
         global pontos_tela
-        if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) or (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y) or (pontos_tela[self.p2].x == pontos_tela[self.p3].x and pontos_tela[self.p2].y == pontos_tela[self.p3].y)):
-            return True
-        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y and pontos_tela[self.p1].y == pontos_tela[self.p3].y):
+        # if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) or (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y) or (pontos_tela[self.p2].x == pontos_tela[self.p3].x and pontos_tela[self.p2].y == pontos_tela[self.p3].y)):
+        #     return True
+        if (pontos_tela[self.p1].y == pontos_tela[self.p2].y and pontos_tela[self.p1].y == pontos_tela[self.p3].y):
             return True
         return False
 
@@ -148,8 +148,16 @@ def get_into_tela():
 
 def top_triangulo(p1,p2,p3):
     global pontos_tela
+    print (pontos_tela[p1],pontos_tela[p2],pontos_tela[p3])
     slope1 = (float(pontos_tela[p3].x - pontos_tela[p1].x)/ float(pontos_tela[p3].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p2].x) /        float(pontos_tela[p3].y - pontos_tela[p2].y))
+
+    print (slope1, slope2)
+
+    if (slope1 < slope2):
+        aux = slope1
+        slope1 = slope2
+        slope2 = aux
 
     x1 = pontos_tela[p3].x
     x2 = pontos_tela[p3].x + 0.5
@@ -179,17 +187,17 @@ def get_ab(p1,p2,p3):
 
 def draw_point(p1):
     global pontos_tela
+    print (pontos_tela[p1])
     # pc = pontos_camera[p1]
     pt = pontos_tela[p1]
     glVertex2f(pt.x,pt.y)
 
 def draw_line(p1,p2):
     global pontos_tela
+    print (pontos_tela[p1],pontos_tela[p2])
 
     x1 = pontos_tela[p1].x
     sline = pontos_tela[p1].y
-
-    print ("aqui")
 
     if (pontos_tela[p2].y - pontos_tela[p1].y == 0):
         x2 = pontos_tela[p2].x
@@ -216,17 +224,24 @@ def draw_line(p1,p2):
 
 def bottom_triangulo(p1,p2,p3):
     global pontos_tela
+    print (pontos_tela[p1],pontos_tela[p2],pontos_tela[p3])
     slope1 = (float(pontos_tela[p2].x - pontos_tela[p1].x)/ float(pontos_tela[p2].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p1].x) / float(pontos_tela[p3].y - pontos_tela[p1].y))
 
+    print (slope1, slope2)
+
     x1 = pontos_tela[p1].x
     x2 = pontos_tela[p1].x + 0.5
+    if (slope1 > slope2):
+        aux = slope1
+        slope1 = slope2
+        slope2 = aux
 
     sline = pontos_tela[p1].y
-
+    print ("baixo")
     while(sline <= pontos_tela[p2].y):
         x_aux = x1
-        # string = ""
+        # print (x_aux, sline,x2, pontos_tela[p2].y)
         while(x_aux <= x2):
             glVertex2f(x_aux,sline)
             x_aux += 1
@@ -240,7 +255,7 @@ def bottom_triangulo(p1,p2,p3):
 def display():
     global width ,height
     glClear(GL_COLOR_BUFFER_BIT)
-    glPointSize(5)
+    glPointSize(2)
     glBegin(GL_POINTS)
     glColor3f(0,0,0)
     # ordenar_triangulos()
@@ -277,9 +292,14 @@ def main():
 
     # init()
     pontos_tela.append(Ponto2D(300,100))
-    pontos_tela.append(Ponto2D(100,200))
+    pontos_tela.append(Ponto2D(100,250))
     pontos_tela.append(Ponto2D(300,100))
+    pontos_tela.append(Ponto2D(200,100))
+    pontos_tela.append(Ponto2D(400,200))
+    pontos_tela.append(Ponto2D(300,100))
+    # print (for i in pontos_tela)
     triangulos.append(TriangulosNormal3D(0,1,2,0))
+    triangulos.append(TriangulosNormal3D(2,3,4,0))
     glutMainLoop()
 
 if __name__ == '__main__':

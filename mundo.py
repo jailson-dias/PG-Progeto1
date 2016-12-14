@@ -4,7 +4,7 @@ from OpenGL.GLUT import *
 
 # tamanho da tela
 
-width,height = 600, 400
+width,height = 800, 600
 pontos_camera = []
 z_buffer = []
 cores = []
@@ -88,32 +88,21 @@ class TriangulosNormal3D(object):
 
     def ponto(self):
         global pontos_tela
-        if((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) and (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y)):
+        if(eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p2].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) and eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)):
             return True
         return False
 
     def reta(self):
         global pontos_tela
-        if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) or (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y) or (pontos_tela[self.p2].x == pontos_tela[self.p3].x and pontos_tela[self.p2].y == pontos_tela[self.p3].y)):
-            return True
-        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y and pontos_tela[self.p1].y == pontos_tela[self.p3].y):
+        if (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)):
             return True
         return False
 
-    def pintar_reta(self):
-        global pontos_tela
-        if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y)):
-            draw_line(self.p1, self.p3)
-        elif (pontos_tela[self.p1].x > pontos_tela[self.p2].x and pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p2].x > pontos_tela[self.p3].x):
-            draw_line(self.p1,self.p3)
-        else:
-            draw_line(self.p1, self.p2)
-
     def igual(self):
         global pontos_tela
-        if ((pontos_tela[self.p1].x == pontos_tela[self.p2].x and pontos_tela[self.p1].y == pontos_tela[self.p2].y) or (pontos_tela[self.p1].x == pontos_tela[self.p3].x and pontos_tela[self.p1].y == pontos_tela[self.p3].y) or (pontos_tela[self.p2].x == pontos_tela[self.p3].x and pontos_tela[self.p2].y == pontos_tela[self.p3].y)):
+        if ((eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p2].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0)) or (eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)) or (eq(abs(pontos_tela[self.p2].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p2].y - pontos_tela[self.p3].y),0))):
             return True
-        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y or pontos_tela[self.p1].y == pontos_tela[self.p3].y or pontos_tela[self.p2].y == pontos_tela[self.p3].y):
+        elif (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) or eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0) or  eq(abs(pontos_tela[self.p2].y - pontos_tela[self.p3].y),0)):
             return True
         return False
 
@@ -132,21 +121,31 @@ class TriangulosNormal3D(object):
             self.p2 = self.p3
             self.p3 = vTmp
 
+    def sort_asc_x(self):
+        global pontos_tela
+        if (pontos_tela[self.p1].x > pontos_tela[self.p2].x):
+            vTmp = self.p1
+            self.p1 = self.p2
+            self.p2 = vTmp
+        if (pontos_tela[self.p1].x > pontos_tela[self.p3].x):
+            vTmp = self.p1
+            self.p1 = self.p3
+            self.p3 = vTmp
+        if (pontos_tela[self.p2].x > pontos_tela[self.p3].x):
+            vTmp = self.p2
+            self.p2 = self.p3
+            self.p3 = vTmp
+
     def pintar(self):
         global pontos_tela, pontos_camera
-        if (pontos_tela[self.p2].y == pontos_tela[self.p3].y):
-            # print (pontos_tela[self.p1],pontos_tela[self.p2],
-            # pontos_tela[self.p3])
+        if (eq(abs(pontos_tela[self.p2].y - pontos_tela[self.p3].y),0)):
             bottom_triangulo(self.p1, self.p2, self.p3)
-        elif (pontos_tela[self.p1].y == pontos_tela[self.p2].y):
+        elif (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0)):
             top_triangulo(self.p1, self.p2, self.p3)
         else:
             # dividindo o triangulo em 2
             p4_tela = Ponto2D(int(pontos_tela[self.p1].x + (float(pontos_tela[self.p2].y - pontos_tela[self.p1].y) / float(pontos_tela[self.p3].y - pontos_tela[self.p1].y)) * (pontos_tela[self.p3].x - pontos_tela[self.p1].x)),
             pontos_tela[self.p2].y)
-
-            # print (pontos_tela[self.p1],pontos_tela[self.p2],
-            # pontos_tela[self.p3],p4_tela)
 
             # encontrando o a,b e c
             l1 = Linha(pontos_tela[self.p1].x,pontos_tela[self.p2].x,
@@ -306,11 +305,6 @@ def init():
     luz = Luz3D(0,0,0,0,0,0,0,0)
     camera = Camera3D(0,0,0,0,0,0,0)
 
-def cor_pontos():
-    global pontos
-    for i in range(0,len(pontos)):
-        pontos[i].cor = get_cor(pontos[i].p, pontos[i].normal)
-
 def mult_matriz(u,v,n,p):
     return Ponto3D(u.x*p.x+u.y*p.y+u.z*p.z,
                     v.x*p.x+v.y*p.y+v.z*p.z,
@@ -319,9 +313,6 @@ def mult_matriz(u,v,n,p):
 # utilizados para passar os pontos da base mundo para a base camera
 def get_pontos_camera():
     global pontos, pontos_camera, camera, luz, luz_camera, triangulos
-
-    # for i in range(0,len(pontos)):
-    #     print (pontos[i].normal)
 
     for i in range(0,len(pontos)):
         a = mult_matriz(camera.u, camera.v,camera.n, pontos[i].p - camera.c)
@@ -364,29 +355,14 @@ class Ponto2D(object):
 def init_z_buffer():
     global z_buffer, cores,width,height
 
-    b = []
-    c = []
-    for j in range(0,height):
-        b.append(999999999)
-        c.append(RGB(255,255,255))
-
-    for i in range(0,width):
-        z_buffer.append(b)
-        cores.append(c)
+    z_buffer = [[9999999]*height for i in range(0,width)]
 
 def get_ponto_tela():
     global pontos_tela, pontos, pontos_camera, camera, width,height
-    # for i in range(0,len(pontos_camera)):
-    #     print (pontos_camera[i].p)
     for i in range(0,len(pontos_camera)):
         x = (camera.d/camera.hx)* (pontos_camera[i].p.x/pontos_camera[i].p.z)
         y = (camera.d/camera.hy) *(pontos_camera[i].p.y / pontos_camera[i].p.z)
-        # print (x,y)
         pontos_tela.append(Ponto2D(int((x + 1)*width/2), int((1-y)*height/2)))
-        # print (int((x + 1)*width/2), int((1-y)*height/2))
-    # print (width, height)
-    # for i in range(0,len(pontos_tela)):
-    #     print (pontos_tela[i])
 
 class Linha(object):
 
@@ -437,28 +413,6 @@ class Escalona(object):
         l2 = l2 + l3
         return (l1.d,l2.d,l3.d)
 
-def triangulos_open_gl(p1,p2,p3):
-    #  z_buffer[p1.x][p1.y] = z
-    #  cor = pontos[triangulos[i].p1].cor/255.0
-    #  print (p1.x,p1.y,cor)
-     glColor3f(0,0,0)
-     glVertex2f(p1.x, p1.y)
-    #  z = (pontos_camera[triangulos[i].p2].z)
-     # if (z_buffer[p2.x][p2.y] > z):
-    #  z_buffer[p2.x][p2.y] = z
-    #  cor = pontos[triangulos[i].p2].cor/255.0
-    #  print (p2.x,p2.y,cor)
-    #  glColor3f(cor.r,cor.g,cor.b)
-     glVertex2f(p2.x, p2.y)
-    #  z = (pontos_camera[triangulos[i].p3].z)
-     # if (z_buffer[p3.x][p3.y] > z):
-    #  z_buffer[p3.x][p3.y] = z
-    #  cor = pontos[triangulos[i].p3].cor/255.0
-    #  print (p3.x,p3.y,cor)
-    #  glColor3f(cor.r,cor.g,cor.b)
-     glVertex2f(p3.x, p3.y)
-
-
 def into(p):
     global width, height
     return (p.x <= width and p.x >= 0 and p.y <= height and p.y >= 0)
@@ -466,35 +420,37 @@ def into(p):
 def get_into_tela():
     global pontos_tela, triangulos, pontos_camera,z_buffer,cores
 
-    # glBegin(GL_POINTS)
+    glPointSize(2)
+    glBegin(GL_POINTS)
     for i in triangulos:
         p1 = pontos_tela[i.p1]
         p2 = pontos_tela[i.p2]
         p3 = pontos_tela[i.p3]
         if(into(p1) and into(p2) and into(p3)):
-            if (i.ponto()):
-                draw_point(i.p1)
-            elif (i.reta()):
-                i.pintar_reta()
+            if (i.reta()):
+                i.sort_asc_x()
+                draw_line(i.p1,i.p3)
             else:
                 i.sort_asc_y()
                 i.pintar()
-            # triangulos_open_gl(p1,p2,p3)
-    # glEnd()
+    glEnd()
 
 def top_triangulo(p1,p2,p3):
     global pontos_camera, pontos_tela, z_buffer, cores
     slope1 = (float(pontos_tela[p3].x - pontos_tela[p1].x)/ float(pontos_tela[p3].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p2].x) /        float(pontos_tela[p3].y - pontos_tela[p2].y))
-
     x1 = pontos_tela[p3].x
     x2 = pontos_tela[p3].x + 0.5
+
+    if (slope1 < slope2):
+        aux = slope1
+        slope1 = slope2
+        slope2 = aux
 
     sline = pontos_tela[p3].y
     l3 = Linha(1,1,1,1)
     while(sline > pontos_tela[p1].y):
         x_aux = x1
-        # string =""
         while(x_aux <= x2):
             l1 = Linha(pontos_tela[p1].x,pontos_tela[p2].x,pontos_tela[p3].x,
                 x_aux)
@@ -502,120 +458,61 @@ def top_triangulo(p1,p2,p3):
                 sline)
             a,b,c = Escalona(l1,l2,l3).esc()
             ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
-            # string += "*"
-            if (z_buffer[int(x_aux)][int(sline)] > ponto.z):
-                z_buffer[int(x_aux)][int(sline)] = ponto.z
+            if (z_buffer[int(x_aux+0.5)][int(sline + 0.5)] > ponto.z):
+                z_buffer[int(x_aux+0.5)][int(sline + 0.5)] = ponto.z
                 normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
                 cor = get_cor(ponto,normal)
                 cor = cor/255.0
-                # cores[int(x_aux)][int(sline)] = cor
                 glColor3f(cor.r,cor.g,cor.b)
-                glVertex2f(x_aux,sline)
+                glVertex2i(int(x_aux+0.5),int(sline+0.5))
             x_aux += 1
         sline-=1
         x1 -= slope1
         x2 -= slope2
-        # print (x1,x2,sline)
-        # print (string)
-    # print()
 
 def get_ab(p1,p2,p3):
-    b = 0
-    if(p2.x-p1.x == 0):
-        b = (p3.y-p1.y)/(p2.y-p1.y)
-    else :
-        b = (p3.x-p1.x)/(p2.x-p1.x)
+    if (eq(abs(p2.x - p1.x),0)):
+        return (1,0)
+    b = (p3.x-p1.x)/(p2.x-p1.x)
     a = 1 - b
     return (a,b)
-
-def draw_point(p1):
-    global pontos_camera, pontos_tela, z_buffer
-    pc = pontos_camera[p1]
-    pt = pontos_tela[p1]
-    if (z_buffer[int(pt.x)][int(pt.y)] > pc.p.z):
-        z_buffer[int(pt.x)][int(pt.y)] = pc.p.z
-        cor = get_cor(pc.p,pc.normal)
-        cor = cor/255.0
-        glColor3f(cor.r,cor.g,cor.b)
-        glVertex2f(pt.x,pt.y)
 
 def draw_line(p1,p2):
     global pontos_camera, pontos_tela, z_buffer
 
-
     x1 = pontos_tela[p1].x
     sline = pontos_tela[p1].y
 
-    if (pontos_tela[p2].y - pontos_tela[p1].y == 0):
-        x2 = pontos_tela[p2].x
-        if (x1 < x2):
-            while(x1 <= x2):
-                a,b = get_ab(pontos_tela[p1],pontos_tela[p2],Ponto2D(x1,sline))
-                ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b
-                if (z_buffer[int(x1)][int(sline)] > ponto.z):
-                    z_buffer[int(x1)][int(sline)] = ponto.z
-                    normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b
-                    cor = get_cor(ponto,normal)
-                    cor = cor/255.0
-                    glColor3f(cor.r,cor.g,cor.b)
-                    glVertex2f(x1,sline)
-                x1 += 1
-        else:
-            while(x1 >= x2):
-                a,b = get_ab(pontos_tela[p1],pontos_tela[p2],Ponto2D(x1,sline))
-                ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b
-                if (z_buffer[int(x1)][int(sline)] > ponto.z):
-                    z_buffer[int(x1)][int(sline)] = ponto.z
-                    normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b
-                    cor = get_cor(ponto,normal)
-                    cor = cor/255.0
-                    glColor3f(cor.r,cor.g,cor.b)
-                    glVertex2f(x1,sline)
-                x1 -= 1
-    else:
-        slope1 = (float(pontos_tela[p2].x - pontos_tela[p1].x)/ float(pontos_tela[p2].y - pontos_tela[p1].y))
-
-        if (sline < pontos_tela[p2].y):
-            while(sline <= pontos_tela[p2].y):
-                a,b = get_ab(pontos_tela[p1],pontos_tela[p2],Ponto2D(x1,sline))
-                ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b
-                if (z_buffer[int(x1)][int(sline)] > ponto.z):
-                    z_buffer[int(x1)][int(sline)] = ponto.z
-                    normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b
-                    cor = get_cor(ponto,normal)
-                    cor = cor/255.0
-                    glColor3f(cor.r,cor.g,cor.b)
-                    glVertex2f(x1,sline)
-                sline+=1
-                x1 += slope1
-        else:
-            while(sline >= pontos_tela[p2].y):
-                a,b = get_ab(pontos_tela[p1],pontos_tela[p2],Ponto2D(x1,sline))
-                ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b
-                if (z_buffer[int(x1)][int(sline)] > ponto.z):
-                    z_buffer[int(x1)][int(sline)] = ponto.z
-                    normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b
-                    cor = get_cor(ponto,normal)
-                    cor = cor/255.0
-                    glColor3f(cor.r,cor.g,cor.b)
-                    glVertex2f(x1,sline)
-                sline-=1
-                x1 -= slope1
+    x2 = pontos_tela[p2].x
+    while(x1 <= x2):
+        a,b = get_ab(pontos_tela[p1],pontos_tela[p2],Ponto2D(x1,sline))
+        ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b
+        if (z_buffer[int(x1+0.5)][int(sline+0.5)] > ponto.z):
+            z_buffer[int(x1+0.5)][int(sline+0.5)] = ponto.z
+            normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b
+            cor = get_cor(ponto,normal)
+            cor = cor/255.0
+            glColor3f(cor.r,cor.g,cor.b)
+            glVertex2f(x1,sline)
+        x1 += 1
 
 def bottom_triangulo(p1,p2,p3):
     global pontos_camera, pontos_tela, z_buffer, cores
-    print (pontos_tela[p1],pontos_tela[p2],pontos_tela[p3])
     slope1 = (float(pontos_tela[p2].x - pontos_tela[p1].x)/ float(pontos_tela[p2].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p1].x) / float(pontos_tela[p3].y - pontos_tela[p1].y))
 
     x1 = pontos_tela[p1].x
     x2 = pontos_tela[p1].x + 0.5
 
+    if (slope1 > slope2):
+        aux = slope1
+        slope1 = slope2
+        slope2 = aux
+
     sline = pontos_tela[p1].y
     l3 = Linha(1,1,1,1)
     while(sline <= pontos_tela[p2].y):
         x_aux = x1
-        # string = ""
         while(x_aux <= x2):
             l1 = Linha(pontos_tela[p1].x,pontos_tela[p2].x,pontos_tela[p3].x,
                 x_aux)
@@ -623,53 +520,22 @@ def bottom_triangulo(p1,p2,p3):
                 sline)
             a,b,c = Escalona(l1,l2,l3).esc()
             ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
-            # string += "*"
-            if (z_buffer[int(x_aux)][int(sline)] > ponto.z):
-                z_buffer[int(x_aux)][int(sline)] = ponto.z
+            if (z_buffer[int(x_aux+0.5)][int(sline + 0.5)] > ponto.z):
+                z_buffer[int(x_aux+0.5)][int(sline + 0.5)] = ponto.z
                 normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
                 cor = get_cor(ponto,normal)
-                # cores[int(x_aux)][int(sline)] = cor
                 cor = cor/255.0
-                # print (x_aux,sline)
                 glColor3f(cor.r,cor.g,cor.b)
-                glVertex2f(x_aux,sline)
+                glVertex2i(int(x_aux+0.5),int(sline+0.5))
             x_aux += 1
         sline+=1
         x1 += slope1
         x2 += slope2
-        # print (string)
-    # print()
 
 def display():
     global width ,height,cores
     glClear(GL_COLOR_BUFFER_BIT)
-
-    glBegin(GL_POINTS)
-    # glBegin(GL_TRIANGLES)
     get_into_tela()
-    # for x,i in enumerate(cores):
-        # string = ""
-        # for y,j in enumerate(i):
-            # print (cores[i][j])
-            # if (not (j.r == 255 and cor.g==255 and cor.b == 255)):
-                # cor = j /255.0
-                # string += " "
-                # glColor3f(cor.r,cor.g,cor.b)
-                # glVertex2i(x,y)
-            # else:
-            #     string += "*"
-        # print ("\n\n\n\n\n")
-        # print (string)
-        # print (cores[i][50],cores[i][300], i)
-
-    # glColor3f(0,0,0)
-    # glVertex2f(50,20)
-    # glVertex2f(50,21)
-    # glVertex2f(50,22)
-    # glVertex2f(50,23)
-
-
-    glEnd()
     glFlush()
 
 
@@ -684,7 +550,7 @@ def reshape(width_v, height_v):
 
 
 def main():
-    global width, height
+    global width, height, pontos_camera, pontos, camera, pontos_camera
     glutInit()
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB)
     glutInitWindowSize(width, height)
