@@ -7,7 +7,9 @@ from OpenGL.GLUT import *
 width,height = 800, 600
 pontos_camera = []
 z_buffer = []
-cores = []
+bezier = []
+m = 0
+# cores = []
 
 pontos_tela = []
 pontos = []
@@ -86,23 +88,9 @@ class TriangulosNormal3D(object):
         self.p3 = p3
         self.normal = normal
 
-    def ponto(self):
-        global pontos_tela
-        if(eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p2].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) and eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)):
-            return True
-        return False
-
     def reta(self):
         global pontos_tela
         if (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)):
-            return True
-        return False
-
-    def igual(self):
-        global pontos_tela
-        if ((eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p2].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0)) or (eq(abs(pontos_tela[self.p1].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)) or (eq(abs(pontos_tela[self.p2].x - pontos_tela[self.p3].x),0) and eq(abs(pontos_tela[self.p2].y - pontos_tela[self.p3].y),0))):
-            return True
-        elif (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) or eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0) or  eq(abs(pontos_tela[self.p2].y - pontos_tela[self.p3].y),0)):
             return True
         return False
 
@@ -226,7 +214,7 @@ def get_cor(ponto, normal):
     ie = RGB(0,0,0)
     if (normal.prod_escalar(l)>=0):
         id = (luz_camera.od%luz_camera.il)*luz_camera.kd*(normal.prod_escalar(l))
-        v = (camera.c - ponto)
+        v = ( - ponto)
         v.normalizado()
         if (normal.prod_escalar(v)<0):
             normal = -normal
@@ -298,10 +286,21 @@ def ler_camera(path):
     n.normalizado()
     camera = Camera3D(c,n.prod_vetorial(vl),vl,n,d,hx,hy)
 
+def ler_pontos(path):
+    global bezier,m
+    arquivo = open(path,'r')
+    m = int(arquivo.readline())
+    i = int(arquivo.readline())
+    while (i>0):
+        i -= 1
+        ponto = arquivo.readline().split(' ')
+        bezier.append(Ponto3D(float(ponto[0]),float(ponto[1]),float(ponto[2])))
+
 def init():
-    global pontos,triangulos, luz, camera
+    global pontos,triangulos, luz, camera,bezier
     pontos = []
     triangulos = []
+    bezier = []
     luz = Luz3D(0,0,0,0,0,0,0,0)
     camera = Camera3D(0,0,0,0,0,0,0)
 
@@ -360,8 +359,10 @@ def init_z_buffer():
 def get_ponto_tela():
     global pontos_tela, pontos, pontos_camera, camera, width,height
     for i in range(0,len(pontos_camera)):
-        x = (camera.d/camera.hx)* (pontos_camera[i].p.x/pontos_camera[i].p.z)
-        y = (camera.d/camera.hy) *(pontos_camera[i].p.y / pontos_camera[i].p.z)
+        x = y = -50
+        if (pontos_camera[i].p.z > 0):
+            x = (camera.d/camera.hx)* (pontos_camera[i].p.x/pontos_camera[i].p.z)
+            y = (camera.d/camera.hy) *(pontos_camera[i].p.y / pontos_camera[i].p.z)
         pontos_tela.append(Ponto2D(int((x + 1)*width/2), int((1-y)*height/2)))
 
 class Linha(object):
@@ -415,11 +416,17 @@ class Escalona(object):
 
 def into(p):
     global width, height
-    return (p.x <= width and p.x >= 0 and p.y <= height and p.y >= 0)
+    return (p.x < width and p.x >= 0 and p.y < height and p.y >= 0)
 
 def get_into_tela():
     global pontos_tela, triangulos, pontos_camera,z_buffer,cores
 
+    pontos_camera = []
+    pontos_tela = []
+    z_buffer = []
+    get_pontos_camera()
+    init_z_buffer()
+    get_ponto_tela()
     glPointSize(2)
     glBegin(GL_POINTS)
     for i in triangulos:
@@ -458,6 +465,7 @@ def top_triangulo(p1,p2,p3):
                 sline)
             a,b,c = Escalona(l1,l2,l3).esc()
             ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
+            # print (x_aux,sline)
             if (z_buffer[int(x_aux+0.5)][int(sline + 0.5)] > ponto.z):
                 z_buffer[int(x_aux+0.5)][int(sline + 0.5)] = ponto.z
                 normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
@@ -532,12 +540,40 @@ def bottom_triangulo(p1,p2,p3):
         x1 += slope1
         x2 += slope2
 
-def display():
-    global width ,height,cores
-    glClear(GL_COLOR_BUFFER_BIT)
-    get_into_tela()
-    glFlush()
+def bezier_casteljau(t):
+    global bezier
+    points = bezier
+    while(len(points)>1):
+        point = points
+        points = []
+        for i in range(0,len(point) - 1):
+            p1 = point[i]*(1-t)
+            p2 =point[i+1]*t
+            points.append(p1+p2)
+    return points[0]
 
+def mov_camera():
+    global m,camera
+    t = 0
+    fator = 1.0 / m
+
+    while (t <= 1):
+        camera.c = bezier_casteljau(t)
+        t += fator
+        init_z_buffer()
+        glClear(GL_COLOR_BUFFER_BIT)
+        get_into_tela()
+
+def display():
+    global width ,height,m,camera
+    t = 0
+    fator = 1.0 / m
+    while (t <= 1):
+        glClear(GL_COLOR_BUFFER_BIT)
+        camera.c = bezier_casteljau(t)
+        t += fator
+        get_into_tela()
+        glFlush()
 
 def reshape(width_v, height_v):
     global width,height
@@ -547,7 +583,6 @@ def reshape(width_v, height_v):
     glOrtho(0.0, width, height, 0.0, -5.0, 5.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-
 
 def main():
     global width, height, pontos_camera, pontos, camera, pontos_camera
@@ -569,10 +604,8 @@ def main():
     ler_objeto('entradas/Objetos/calice2.byu')
     ler_luz('luz.txt')
     ler_camera('entradas/Cameras/calice2.cfg')
+    ler_pontos('bezier.txt')
 
-    get_pontos_camera()
-    init_z_buffer()
-    get_ponto_tela()
     glutMainLoop()
 
 if __name__ == '__main__':
