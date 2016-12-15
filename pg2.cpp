@@ -15,6 +15,7 @@ bool eq(float a,float b){
     return false;
 }
 
+
 class Ponto2D{
   public:
     float x,y;
@@ -134,15 +135,12 @@ public:
       l1 = l1/l1.a;
       l2 = l2%l1;
       l3 = l3%l1;
-//      cout << l1.to_string() << " " << l2.to_string() << " " << l3.to_string()<<endl;
       l2 = l2/l2.b;
       l1 = l1^l2;
       l3 = l3^l2;
-//      cout << l1.to_string() << " " << l2.to_string() << " " << l3.to_string()<<endl;
       l3 = l3/l3.c;
       l1 = l1+l3;
       l2 = l2 + l3;
-//      cout << l1.to_string() << " " << l2.to_string() << " " << l3.to_string()<<endl;
       return Linha(l1.d,l2.d,l3.d,0);
     }
 
@@ -332,10 +330,6 @@ void bottom_triangulo(int p1,int p2,int p3){
                 Ponto3D normal = pontos_camera[p1].normal*esc.a + pontos_camera[p2].normal*esc.b + pontos_camera[p3].normal*esc.c;
                 RGB cor = get_cor(ponto,normal);
                 cor = cor/255.0;
-
-//                for (int i=0; i<pontos_camera.size();i++){
-//                    printf("%f %f (%f %f %f)\n",x_aux,sline,cor.r,cor.g,cor.b);
-//                }
                 glColor3f(cor.r,cor.g,cor.b);
                 glVertex2i((int)(x_aux+0.5),(int)(sline+0.5));
             }
@@ -438,7 +432,6 @@ void ler_objeto(char *path){
             pontos[a-1].normal = pontos[a-1].normal + normal; // calcula a normal do ponto
             pontos[b-1].normal = pontos[b-1].normal + normal;
             pontos[c-1].normal = pontos[c-1].normal + normal;
-//            cout << pontos[c-1].normal.to_string()<< endl;
         }
 
         for (int i = 0;i<pontos.size();i++){
@@ -499,7 +492,6 @@ void ler_pontos(char *path){
     if(arquivo.is_open()){
         int i;
         arquivo>>tempo>>m>>i;
-//        cout << i<< endl;
         while (i-->0){
             float x,y,z;
             arquivo>>x>>y>>z;
@@ -574,7 +566,6 @@ void get_into_tela(){
     get_pontos_camera();
     init_z_buffer();
     get_ponto_tela();
-    int r=0,t=0,z=0;
     glPointSize(2);
 
     glBegin(GL_POINTS);
@@ -582,15 +573,12 @@ void get_into_tela(){
         Ponto2D p1 = pontos_tela[triangulos[i].p1];
         Ponto2D p2 = pontos_tela[triangulos[i].p2];
         Ponto2D p3 = pontos_tela[triangulos[i].p3];
-        z++;
         if(into(p1) && into(p2) && into(p3)){
             if (triangulos[i].reta()){
-                r++;
                 triangulos[i].sort_asc_x();
                 draw_line(triangulos[i].p1,triangulos[i].p3);
             }
             else{
-                t++;
                 triangulos[i].sort_asc_y();
                 triangulos[i].pintar();
             }
@@ -724,15 +712,18 @@ int main(int argc, char **argv){
     glutReshapeFunc(reshape);
 
     init();
-    char objeto_ler[150] = "entradas/Objetos/moto.byu";
+    char objeto_ler[150] = "entradas/Objetos/calice2.byu";
     ler_objeto(objeto_ler);
     char luz_ler[150] = "luz.txt";
     ler_luz(luz_ler);
-    char camera_ler[150] = "entradas/Cameras/moto.cfg";
+    char camera_ler[150] = "entradas/Cameras/calice2.cfg";
     ler_camera(camera_ler);
     char pontos_bezier[150] = "bezier.txt";
     ler_pontos(pontos_bezier);
-
+    cout << pontos.size() << endl;
+    cout << luz.ka << endl;
+    cout << camera.c.x << endl;
+    cout << bezier.size() << endl;
     thread t(loop_arquivo);
 //    t.join();
     glutMainLoop();
