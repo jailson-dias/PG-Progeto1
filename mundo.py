@@ -90,6 +90,7 @@ class TriangulosNormal3D(object):
 
     def reta(self):
         global pontos_tela
+        # print (pontos_tela[self.p1].y,pontos_tela[self.p2].y)
         if (eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p2].y),0) and eq(abs(pontos_tela[self.p1].y - pontos_tela[self.p3].y),0)):
             return True
         return False
@@ -204,15 +205,20 @@ class RGB(object):
         return "("+str(self.r)+", "+str(self.g)+", "+str(self.b)+")"
 
 # utilizado para calcular a formula (I = Ia.ka + Ip*Op.kd.(N.L) + Ipm.ks.(R.V)^q)
+
+# gg = True
 def get_cor(ponto, normal):
-    global camera, luz_camera
+    global camera, luz_camera,gg
+    print (ponto, normal)
     ia = luz_camera.ia*luz_camera.ka
     l = (luz_camera.pl-ponto)
     l.normalizado()
     normal.normalizado()
     id = RGB(0,0,0)
     ie = RGB(0,0,0)
+    # print (normal, l)
     if (normal.prod_escalar(l)>=0):
+        # print (normal.prod_escalar(l))
         id = (luz_camera.od%luz_camera.il)*luz_camera.kd*(normal.prod_escalar(l))
         v = ( - ponto)
         v.normalizado()
@@ -222,6 +228,7 @@ def get_cor(ponto, normal):
         r.normalizado()
         if (v.prod_escalar(r)>=0):
             ie =(luz_camera.il)*luz_camera.ks*(pow(r.prod_escalar(v), luz_camera.n))
+    # print (ia,id,ie)
     return ia + id + ie
 
 def ler_objeto(path):
@@ -394,6 +401,8 @@ class Linha(object):
                     self.b,
                     self.c - a.c*self.c,
                     self.d - a.d*self.c)
+    def __str__(self):
+        return ("(" + str(self.a) +", "+ str(self.b) +","+ str(self.c) +", "+ str(self.d)+")")
 
 class Escalona(object):
 
@@ -406,12 +415,15 @@ class Escalona(object):
         l1 = self.l1/self.l1.a
         l2 = self.l2%l1
         l3 = self.l3%l1
+        # print (l1,l2,l3)
         l2 = l2/l2.b
         l1 = l1^l2
         l3 = l3^l2
+        # print (l1,l2,l3)
         l3 = l3/l3.c
         l1 = l1+l3
         l2 = l2 + l3
+        # print (l1,l2,l3)
         return (l1.d,l2.d,l3.d)
 
 def into(p):
@@ -429,21 +441,26 @@ def get_into_tela():
     get_ponto_tela()
     glPointSize(2)
     glBegin(GL_POINTS)
+    r=t=g=0
     for i in triangulos:
         p1 = pontos_tela[i.p1]
         p2 = pontos_tela[i.p2]
         p3 = pontos_tela[i.p3]
+        g+=1;
         if(into(p1) and into(p2) and into(p3)):
             if (i.reta()):
+                r +=1
                 i.sort_asc_x()
                 draw_line(i.p1,i.p3)
             else:
+                t+=1
                 i.sort_asc_y()
                 i.pintar()
     glEnd()
+    print (r,t,g)
 
 def top_triangulo(p1,p2,p3):
-    global pontos_camera, pontos_tela, z_buffer, cores
+    global pontos_camera, pontos_tela, z_buffer
     slope1 = (float(pontos_tela[p3].x - pontos_tela[p1].x)/ float(pontos_tela[p3].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p2].x) /        float(pontos_tela[p3].y - pontos_tela[p2].y))
     x1 = pontos_tela[p3].x
@@ -464,12 +481,15 @@ def top_triangulo(p1,p2,p3):
             l2 = Linha(pontos_tela[p1].y,pontos_tela[p2].y,pontos_tela[p3].y,
                 sline)
             a,b,c = Escalona(l1,l2,l3).esc()
+            # print (a,b,c,0)
             ponto = pontos_camera[p1].p*a + pontos_camera[p2].p*b + pontos_camera[p3].p*c
             # print (x_aux,sline)
             if (z_buffer[int(x_aux+0.5)][int(sline + 0.5)] > ponto.z):
                 z_buffer[int(x_aux+0.5)][int(sline + 0.5)] = ponto.z
                 normal = pontos_camera[p1].normal*a + pontos_camera[p2].normal*b + pontos_camera[p3].normal*c
+                # print (ponto.z)
                 cor = get_cor(ponto,normal)
+                # print (cor)
                 cor = cor/255.0
                 glColor3f(cor.r,cor.g,cor.b)
                 glVertex2i(int(x_aux+0.5),int(sline+0.5))
@@ -505,7 +525,7 @@ def draw_line(p1,p2):
         x1 += 1
 
 def bottom_triangulo(p1,p2,p3):
-    global pontos_camera, pontos_tela, z_buffer, cores
+    global pontos_camera, pontos_tela, z_buffer,gg
     slope1 = (float(pontos_tela[p2].x - pontos_tela[p1].x)/ float(pontos_tela[p2].y - pontos_tela[p1].y))
     slope2 = (float(pontos_tela[p3].x - pontos_tela[p1].x) / float(pontos_tela[p3].y - pontos_tela[p1].y))
 
