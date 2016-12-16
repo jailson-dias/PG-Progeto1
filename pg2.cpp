@@ -226,12 +226,12 @@ RGB get_cor(Ponto3D ponto, Ponto3D normal){
     normal.normalizado();
     RGB id = RGB(0,0,0);
     RGB ie = RGB(0,0,0);
+    Ponto3D v = ( - ponto);
+    v.normalizado();
+    if (normal.prod_escalar(v)<0)
+        normal = -normal;
     if (normal.prod_escalar(l)>=0){
         id = (luz_camera.od*luz_camera.il)*luz_camera.kd*(normal.prod_escalar(l));
-        Ponto3D v = ( - ponto);
-        v.normalizado();
-        if (normal.prod_escalar(v)<0)
-            normal = -normal;
         Ponto3D r = (normal*2)*(normal.prod_escalar(l)) - l;
         r.normalizado();
         if (v.prod_escalar(r)>=0)
