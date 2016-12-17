@@ -389,6 +389,7 @@ class TriangulosNormal3D{
             // encontrando o novo ponto
             Ponto3D ponto = pontos_camera[p1].p*esc.a+pontos_camera[p2].p*esc.b + pontos_camera[p3].p*esc.c;
             Ponto3D normal = pontos_camera[p1].normal*esc.a + pontos_camera[p2].normal*esc.b + pontos_camera[p3].normal*esc.c;
+
             PontosNormal3D p4_camera = PontosNormal3D(ponto,normal);
             pontos_tela.push_back(p4_tela);
             pontos_camera.push_back(p4_camera);
@@ -506,9 +507,9 @@ void init(){
     pontos.clear();
     triangulos.clear();
     bezier.clear();
-     z_buffer = (float**)malloc(width*sizeof(float*));
-     for (int i = 0;i<width;i++){
-       z_buffer[i] = (float*)malloc(height*sizeof(float));
+     z_buffer = (float**)malloc((width + 100)*sizeof(float*));
+     for (int i = 0;i<width+100;i++){
+       z_buffer[i] = (float*)malloc((height+100)*sizeof(float));
      }
     luz = Luz3D(Ponto3D(0,0,0),0.0,RGB(0,0,0),0.0,RGB(0,0,0),0.0,RGB(0,0,0), 0.0);
     camera = Camera3D(Ponto3D(0,0,0),Ponto3D(0,0,0),Ponto3D(0,0,0),Ponto3D(0,0,0),0.0,0.0,0.0);
@@ -535,8 +536,8 @@ void get_pontos_camera(){
 
 
 void init_z_buffer(){
-    for(int i = 0;i<width;i++){
-      for(int j=0;j<height;j++){
+    for(int i = 0;i<width+50;i++){
+      for(int j=0;j<height+50;j++){
         z_buffer[i][j] = INT_MAX/3;
       }
     }
@@ -628,11 +629,6 @@ void reshape(GLsizei width_v, GLsizei height_v){
 
 
 void loop_arquivo(){
-//    cout << "Escolhar uma das opções abaixo:" << endl;
-//    cout << "1 - Alterar objeto" << endl;
-//    cout << "2 - Alterar camera" << endl;
-//    cout << "3 - Alterar luz" << endl;
-//    cout << "4 - Alterar pontos de bezier" << endl;
     cout << "Para alterar o arquivo de entrada você precisar esperar terminar a execução atual e depois informar os quatros arquivos de entrada"<< endl;
     cout << "Digite o endereço do objeto" << endl;
     char ob[250];
@@ -652,46 +648,6 @@ void loop_arquivo(){
     ler_luz(ll);
     ler_pontos(pb);
     glutPostRedisplay();
-    /*
-    int comando;
-    cin >>comando;
-    switch (comando) {
-        case 1:
-            cout << "Digite o endereço do objeto" << endl;
-            pontos.clear();
-            char ob[250];
-            scanf("%s",ob);
-            ler_objeto(ob);
-            cout<<pontos.size()<<endl;
-            glutPostRedisplay();
-            break;
-        case 2:
-            cout << "Digite o endereço da camera" << endl;
-            camera = Camera3D(Ponto3D(0,0,0),Ponto3D(0,0,0),Ponto3D(0,0,0),Ponto3D(0,0,0),0.0,0,0);
-            char cam[250];
-            scanf("%s",cam);
-            ler_camera(cam);
-            glutPostRedisplay();
-            break;
-        case 3:
-            cout << "Digite o endereço da luz" << endl;
-            luz = Luz3D(Ponto3D(0,0,0),0,RGB(0,0,0),0,RGB(0,0,0),0,RGB(0,0,0),0);
-            char ll[250];
-            scanf("%s",ll);
-            ler_luz(ll);
-            glutPostRedisplay();
-            break;
-        case 4:
-            cout << "Digite o endereço dos pontos de bezier" << endl;
-            bezier.clear();
-            char pb[250];
-            scanf("%s",pb);
-            ler_pontos(pb);
-            glutPostRedisplay();
-            break;
-        default:
-            cout << "Valor Inválido" << endl;
-    }*/
     loop_arquivo();
 }
 
@@ -735,6 +691,18 @@ int main(int argc, char **argv){
 
 entradas/Objetos/calice2.byu
 entradas/Cameras/calice2.cfg
+luz.txt
+bezier.txt
+
+
+entradas/Objetos/vader.byu
+entradas/Cameras/vader.cfg
+luz.txt
+bezier.txt
+
+
+entradas/Objetos/moto.byu
+entradas/Cameras/moto.cfg
 luz.txt
 bezier.txt
 
